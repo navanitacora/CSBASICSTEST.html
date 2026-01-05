@@ -71,7 +71,7 @@ const BANK = [
   { q:"Which service typically uses port 53?", correct:"DNS", wrong:["HTTPS","FTP","NTP"] }
 ];
 
-// ---------- helpers ----------
+
 function shuffle(arr){
   for (let i = arr.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));
@@ -81,13 +81,13 @@ function shuffle(arr){
 }
 
 function pick20Questions(){
-  // copy, shuffle, take 20
+  
   const copy = BANK.slice();
   shuffle(copy);
   return copy.slice(0, 20);
 }
 
-// ---------- build quiz ----------
+
 const QUESTIONS = pick20Questions();
 
 function build(){
@@ -125,7 +125,7 @@ function build(){
 
 build();
 
-// ---------- grade ----------
+
 function grade(){
   // block resubmits
   document.getElementById("submitBtn").disabled = true;
@@ -157,7 +157,7 @@ function grade(){
   out.style.display = "block";
   out.innerHTML = report;
 
-  // scroll to results
+
   out.scrollIntoView({ behavior: "smooth" });
 }
 
