@@ -27,7 +27,7 @@
 #############################################
 </pre>
 
-<p class="small">20 questions. Pick one answer each. You’ll see the correct answers after you submit.</p>
+<p class="small">10 questions. Pick one answer each. You’ll see the correct answers after you submit.</p>
 
 <form id="quiz"></form>
 
@@ -88,7 +88,7 @@ function pick20Questions(){
 }
 
 
-const QUESTIONS = pick20Questions();
+const QUESTIONS = shuffle(BANK.slice()).slice(0, 10);
 
 function build(){
   const form = document.getElementById("quiz");
@@ -151,7 +151,7 @@ function grade(){
     report += `</div>`;
   });
 
-  report = `<p><strong>Score:</strong> ${score}/20 &nbsp; | &nbsp; <strong>Answered:</strong> ${answered}/20</p>` + report;
+  report = `<p><strong>Score:</strong> ${score}/10 &nbsp; | &nbsp; <strong>Answered:</strong> ${answered}/20</p>` + report;
 
   const out = document.getElementById("output");
   out.style.display = "block";
