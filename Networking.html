@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Networking Test</title>
+<style>
+  body { background:black; color:#00ff00; font-family: monospace; padding: 20px; }
+  a { color:#00ff00; text-decoration:none; }
+  .wrap { border:2px solid #00ff00; padding:20px; max-width: 900px; margin: 0 auto; }
+  .q { margin: 18px 0; padding: 12px; border:1px solid #00ff00; }
+  .q h3 { margin: 0 0 10px 0; font-size: 16px; }
+  label { display:block; margin: 6px 0; cursor:pointer; }
+  button { background:black; color:#00ff00; border:2px solid #00ff00; padding:10px 14px; font-family: monospace; cursor:pointer; }
+  button:hover { background:#00ff00; color:black; }
+  .result { margin-top: 20px; padding: 12px; border:2px solid #00ff00; }
+  .wrong { color: #ff5555; }
+  .right { color: #55ff55; }
+  .small { opacity: 0.9; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<pre>
+#############################################
+#               NETWORKING TEST             #
+#############################################
+</pre>
+
+<p class="small">20 questions. Pick one answer each. You’ll see the correct answers after you submit.</p>
+
+<form id="quiz"></form>
+
+<button id="submitBtn" type="button" onclick="grade()">Submit</button>
+<a href="index.html" style="margin-left:14px;">[ Back ]</a>
+
+<div id="output" class="result" style="display:none;"></div>
+</div>
+
+<script>
+/*
+Each question:
+- q: question text
+- correct: correct answer text
+- wrong: array of 3 wrong answers
+*/
+const BANK = [
+  { q:"What does DNS do?", correct:"Maps domain names to IP addresses", wrong:["Encrypts web traffic","Routes packets between networks","Allocates MAC addresses"] },
+  { q:"Which protocol is used to assign IP addresses automatically?", correct:"DHCP", wrong:["DNS","ARP","ICMP"] },
+  { q:"What does ARP do on a local network?", correct:"Finds the MAC address for an IP address", wrong:["Finds the IP for a MAC across the internet","Encrypts packets","Creates TCP connections"] },
+  { q:"Which is a private IPv4 range?", correct:"192.168.0.0/16", wrong:["8.8.8.0/24","100.64.0.0/10 (CGNAT, not classic RFC1918)","200.1.1.0/24"] },
+  { q:"What port does HTTPS use by default?", correct:"443", wrong:["80","22","53"] },
+  { q:"What port does HTTP use by default?", correct:"80", wrong:["443","25","110"] },
+  { q:"What does NAT commonly do in home routers?", correct:"Translates private IPs to a public IP", wrong:["Converts TCP to UDP","Assigns MAC addresses","Blocks all inbound traffic automatically"] },
+  { q:"What layer is IP (Internet Protocol) in the OSI model?", correct:"Network (Layer 3)", wrong:["Transport (Layer 4)","Data Link (Layer 2)","Application (Layer 7)"] },
+  { q:"What layer is Ethernet in the OSI model (most associated)?", correct:"Data Link (Layer 2)", wrong:["Network (Layer 3)","Transport (Layer 4)","Session (Layer 5)"] },
+  { q:"What does a switch mainly use to forward frames?", correct:"MAC address table", wrong:["DNS records","ARP cache only","Port 80 headers"] },
+  { q:"What does a router mainly use to forward packets?", correct:"Routing table", wrong:["MAC address table","DNS cache","TLS certificates"] },
+  { q:"What does ICMP 'ping' test?", correct:"Reachability and round-trip time", wrong:["DNS resolution speed","TLS encryption strength","Switch MAC table size"] },
+  { q:"Which protocol provides reliable, ordered delivery?", correct:"TCP", wrong:["UDP","ICMP","ARP"] },
+  { q:"Which protocol is connectionless and best-effort?", correct:"UDP", wrong:["TCP","TLS","SSH"] },
+  { q:"What does a subnet mask /24 mean in IPv4?", correct:"256 total addresses (254 usable typically)", wrong:["24 total addresses","24 usable hosts exactly","It’s an IPv6 prefix"] },
+  { q:"What is the broadcast address for 192.168.1.0/24?", correct:"192.168.1.255", wrong:["192.168.1.0","192.168.1.1","192.168.0.255"] },
+  { q:"Which device commonly separates collision domains per port?", correct:"Switch", wrong:["Hub","Repeater","Modem only"] },
+  { q:"What is the default gateway used for?", correct:"To reach other networks", wrong:["To assign DNS names","To encrypt traffic","To translate MAC addresses into IP addresses"] },
+  { q:"What does TTL (IPv4) help prevent?", correct:"Packets looping forever", wrong:["DNS spoofing","ARP poisoning","TCP retransmissions"] },
+  { q:"What is a VLAN?", correct:"Logical separation of networks on the same switch", wrong:["A type of internet cable","A routing protocol","A DNS record type"] },
+  { q:"Which is a common routing protocol?", correct:"OSPF", wrong:["HTTP","SSH","ARP"] },
+  { q:"What does CIDR notation /16 represent?", correct:"A prefix length of 16 bits", wrong:["16 usable hosts","16 networks exactly","A port range"] },
+  { q:"Which service typically uses port 22?", correct:"SSH", wrong:["SMTP","DNS","HTTP"] },
+  { q:"Which service typically uses port 53?", correct:"DNS", wrong:["HTTPS","FTP","NTP"] }
+];
+
+// ---------- helpers ----------
+function shuffle(arr){
+  for (let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function pick20Questions(){
+  // copy, shuffle, take 20
+  const copy = BANK.slice();
+  shuffle(copy);
+  return copy.slice(0, 20);
+}
+
+// ---------- build quiz ----------
+const QUESTIONS = pick20Questions();
+
+function build(){
+  const form = document.getElementById("quiz");
+  form.innerHTML = "";
+
+  QUESTIONS.forEach((item, idx) => {
+    const all = shuffle([item.correct, ...item.wrong].slice()); // 4 answers shuffled
+
+    const div = document.createElement("div");
+    div.className = "q";
+
+    const h = document.createElement("h3");
+    h.textContent = (idx+1) + ") " + item.q;
+    div.appendChild(h);
+
+    all.forEach((ans) => {
+      const id = `q${idx}_${ans.replaceAll(" ", "_").slice(0,20)}`;
+
+      const label = document.createElement("label");
+
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "q" + idx;
+      input.value = ans;
+
+      label.appendChild(input);
+      label.appendChild(document.createTextNode(" " + ans));
+      div.appendChild(label);
+    });
+
+    form.appendChild(div);
+  });
+}
+
+build();
+
+// ---------- grade ----------
+function grade(){
+  // block resubmits
+  document.getElementById("submitBtn").disabled = true;
+
+  let score = 0;
+  let answered = 0;
+
+  let report = "<pre>#############################################\n#                 RESULTS                   #\n#############################################</pre>";
+
+  QUESTIONS.forEach((item, idx) => {
+    const chosen = document.querySelector(`input[name="q${idx}"]:checked`);
+    const userAns = chosen ? chosen.value : "(no answer)";
+    if (chosen) answered++;
+
+    const correct = item.correct;
+    const isRight = (userAns === correct);
+    if (isRight) score++;
+
+    report += `<div class="q">`;
+    report += `<h3>${idx+1}) ${item.q}</h3>`;
+    report += `<div>Your answer: <span class="${isRight ? "right" : "wrong"}">${escapeHtml(userAns)}</span></div>`;
+    report += `<div>Correct: <span class="right">${escapeHtml(correct)}</span></div>`;
+    report += `</div>`;
+  });
+
+  report = `<p><strong>Score:</strong> ${score}/20 &nbsp; | &nbsp; <strong>Answered:</strong> ${answered}/20</p>` + report;
+
+  const out = document.getElementById("output");
+  out.style.display = "block";
+  out.innerHTML = report;
+
+  // scroll to results
+  out.scrollIntoView({ behavior: "smooth" });
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+</script>
+
+</body>
+</html>
