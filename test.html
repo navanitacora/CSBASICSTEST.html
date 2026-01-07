@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ASCII Cat Game</title>
+  <style>
+    body {
+      background: #222;
+      color: #ffcc99;
+      font-family: monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #game {
+      background: #3b2a1a;
+      width: 380px; /* ≈10cm */
+      height: 380px;
+      border: 2px dashed #ffcc99;
+      position: relative;
+      font-size: 24px;
+      line-height: 1;
+      cursor: crosshair;
+    }
+
+    .entity {
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game">
+  <div id="cat" class="entity">🐱</div>
+  <div id="ball" class="entity">⚽</div>
+</div>
+
+<script>
+  const game = document.getElementById('game');
+  const cat = document.getElementById('cat');
+  const ball = document.getElementById('ball');
+
+  let catPos = { x: 10, y: 10 };
+  let ballPos = { x: 200, y: 200 };
+
+  function setPosition(el, pos) {
+    el.style.left = pos.x + 'px';
+    el.style.top = pos.y + 'px';
+  }
+
+  function moveCatTowardBall() {
+    const dx = ballPos.x - catPos.x;
+    const dy = ballPos.y - catPos.y;
+
+    const stepX = dx !== 0 ? dx / Math.abs(dx) * 5 : 0;
+    const stepY = dy !== 0 ? dy / Math.abs(dy) * 5 : 0;
+
+    catPos.x += stepX;
+    catPos.y += stepY;
+
+    setPosition(cat, catPos);
+
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      requestAnimationFrame(moveCatTowardBall);
+    }
+  }
+
+  game.addEventListener('click', e => {
+    const rect = game.getBoundingClientRect();
+    ballPos.x = e.clientX - rect.left;
+    ballPos.y = e.clientY - rect.top;
+    setPosition(ball, ballPos);
+    moveCatTowardBall();
+  });
+
+  setPosition(cat, catPos);
+  setPosition(ball, ballPos);
+</script>
+
+</body>
+</html>
