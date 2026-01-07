@@ -5,80 +5,144 @@
   <title>ASCII Cat Game</title>
   <style>
     body {
-      background: #222;
+      background: #111;
       color: #ffcc99;
       font-family: monospace;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      margin: 0;
     }
 
     #game {
-      background: #3b2a1a;
-      width: 380px; /* ≈10cm */
+      width: 380px;
       height: 380px;
-      border: 2px dashed #ffcc99;
+      border: 2px solid #ffcc99;
+      background-color: #222;
       position: relative;
-      font-size: 24px;
-      line-height: 1;
-      cursor: crosshair;
+      overflow: hidden;
     }
 
-    .entity {
+    pre {
+      margin: 0;
+      font-size: 14px;
+      line-height: 14px;
       position: absolute;
     }
   </style>
 </head>
 <body>
-
-<div id="game">
-  <div id="cat" class="entity">🐱</div>
-  <div id="ball" class="entity">⚽</div>
-</div>
+<div id="game"></div>
 
 <script>
-  const game = document.getElementById('game');
-  const cat = document.getElementById('cat');
-  const ball = document.getElementById('ball');
+const game = document.getElementById('game');
+const width = 38; // characters
+const height = 27; // lines
 
-  let catPos = { x: 10, y: 10 };
-  let ballPos = { x: 200, y: 200 };
+let map = [];
+for (let y = 0; y < height; y++) {
+  map[y] = [];
+  for (let x = 0; x < width; x++) {
+    if (y === height - 1) map[y][x] = '_'; // floor
+    else map[y][x] = ' ';
+  }
+}
 
-  function setPosition(el, pos) {
-    el.style.left = pos.x + 'px';
-    el.style.top = pos.y + 'px';
+let cat = {
+  x: 5,
+  y: height - 2,
+  art: [' /\_/\', '( o.o )', '> ^ <'],
+  chasing: false
+};
+
+let ball = {
+  x: 20,
+  y: 0,
+  vx: 0,
+  vy: 0,
+  held: false,
+  gravity: 0.2
+};
+
+function draw() {
+  let display = map.map(row => row.slice());
+
+  if (!ball.held) {
+    display[Math.round(ball.y)][Math.round(ball.x)] = 'o';
   }
 
-  function moveCatTowardBall() {
-    const dx = ballPos.x - catPos.x;
-    const dy = ballPos.y - catPos.y;
-
-    const stepX = dx !== 0 ? dx / Math.abs(dx) * 5 : 0;
-    const stepY = dy !== 0 ? dy / Math.abs(dy) * 5 : 0;
-
-    catPos.x += stepX;
-    catPos.y += stepY;
-
-    setPosition(cat, catPos);
-
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-      requestAnimationFrame(moveCatTowardBall);
+  for (let i = 0; i < cat.art.length; i++) {
+    const cy = cat.y - (cat.art.length - 1) + i;
+    for (let j = 0; j < cat.art[i].length; j++) {
+      const cx = cat.x + j;
+      if (cy >= 0 && cy < height && cx >= 0 && cx < width)
+        display[cy][cx] = cat.art[i][j];
     }
   }
 
-  game.addEventListener('click', e => {
+  game.innerHTML = '<pre>' + display.map(r => r.join('')).join('\n') + '</pre>';
+}
+
+function update() {
+  if (!ball.held) {
+    ball.vy += ball.gravity;
+    ball.y += ball.vy;
+
+    if (ball.y >= height - 2) {
+      ball.y = height - 2;
+      ball.vy *= -0.5;
+    }
+  }
+
+  if (!cat.chasing) {
+    // wander
+    if (Math.random() < 0.01) cat.x += Math.random() < 0.5 ? -1 : 1;
+  } else {
+    if (Math.abs(ball.x - cat.x) > 1) {
+      cat.x += ball.x > cat.x ? 1 : -1;
+    } else {
+      cat.chasing = false; // reached ball
+    }
+  }
+
+  cat.x = Math.max(0, Math.min(width - 10, cat.x));
+
+  draw();
+  requestAnimationFrame(update);
+}
+
+// click to pick up / throw the ball
+game.addEventListener('mousedown', e => {
+  const rect = game.getBoundingClientRect();
+  const mouseX = Math.floor((e.clientX - rect.left) / (rect.width / width));
+  const mouseY = Math.floor((e.clientY - rect.top) / (rect.height / height));
+
+  if (Math.abs(mouseX - ball.x) < 2 && Math.abs(mouseY - ball.y) < 2) {
+    ball.held = true;
+  }
+});
+
+game.addEventListener('mousemove', e => {
+  if (ball.held) {
     const rect = game.getBoundingClientRect();
-    ballPos.x = e.clientX - rect.left;
-    ballPos.y = e.clientY - rect.top;
-    setPosition(ball, ballPos);
-    moveCatTowardBall();
-  });
+    ball.x = Math.floor((e.clientX - rect.left) / (rect.width / width));
+    ball.y = Math.floor((e.clientY - rect.top) / (rect.height / height));
+  }
+});
 
-  // Initial positions
-  setPosition(cat, catPos);
-  setPosition(ball, ballPos);
+game.addEventListener('mouseup', e => {
+  if (ball.held) {
+    ball.held = false;
+    ball.vx = (Math.random() - 0.5) * 2;
+    ball.vy = -2;
+    cat.chasing = true;
+  }
+});
+
+// Init
+draw();
+update();
 </script>
-
 </body>
 </html>
