@@ -57,19 +57,19 @@ let cat = {
 };
 
 let ball = {
-  x: 20,
+  x: 40,
   y: 0,
   vx: 0,
   vy: 0,
   held: false,
-  gravity: 0.2
+  gravity: 0.1
 };
 
 function draw() {
   let display = map.map(row => row.slice());
 
   if (!ball.held) {
-    display[Math.round(ball.y)][Math.round(ball.x)] = 'o';
+    display[Math.round(ball.y)][Math.round(ball.x)] = 'O';
   }
 
   for (let i = 0; i < cat.art.length; i++) {
