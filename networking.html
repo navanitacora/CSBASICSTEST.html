@@ -80,32 +80,32 @@
   }
 
   input[type="radio"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 1em;
-    height: 1em;
-    border: none;
-    outline: none;
-    margin: 0;
-    position: relative;
-    background: transparent;
-    cursor: pointer;
-  }
-    
-  input[type="radio"]:checked::before {
+  appearance: none;
+  -webkit-appearance: none;
+  font-size: 20px;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  background: transparent;
+  border: none;
+  position: relative;
+  cursor: pointer;
+}
+
+input[type="radio"]::before {
   content: "♡";
-  color: #ffcc99; 
-  position: absolute;
+  color: #ffcc99;
   font-size: 20px;
   position: absolute;
   top: -2px;
   left: 0;
 }
 
-  input[type="radio"]:checked::before {
+input[type="radio"]:checked::before {
   content: "♥";
   color: #ffcc99;
 }
+
 
   .q {
     margin: 18px 0;
